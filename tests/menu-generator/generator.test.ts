@@ -1,0 +1,13 @@
+import { describe, expect, it } from "vitest";
+import { generateMenu, replacementOptions } from "@/domain/menu-generator/generator";
+import type { MealCandidate } from "@/domain/menu-generator/types";
+
+function meal(id: string, slot: "lunch" | "dinner", protein: MealCandidate["proteinFamily"], carb = false): MealCandidate { return { id, name: id, slot, functionalType: protein === "legumes" ? "traditional_legume" : "protein_vegetables", proteinFamily: protein, active: true, preference: "normal", hasConcentratedCarb: carb, isInformal: false, isBatchCooking: false, vegetablesRequired: true, ingredients: [{ unchanged: true }] }; }
+const meals = [meal("l-poultry", "lunch", "poultry", true), meal("l-pork", "lunch", "pork", true), meal("l-fish", "lunch", "white_fish", true), meal("l-legume", "lunch", "legumes", true), meal("l-beef", "lunch", "beef"), meal("d-white", "dinner", "white_fish"), meal("d-blue", "dinner", "oily_fish"), meal("d-poultry", "dinner", "poultry"), meal("d-eggs", "dinner", "eggs"), meal("d-beef", "dinner", "beef")];
+const input = { meals, recentMealIds: [], settings: { maxDinnerCarbs: 2, varietyMode: "balanced" as const, candidateCount: 40 }, seed: 42 };
+describe("generator", () => {
+  it("generates five lunches and five dinners on weekdays", () => { const result = generateMenu(input); expect(result.items).toHaveLength(10); expect(result.items.filter((item) => item.slot === "lunch")).toHaveLength(5); expect(new Set(result.items.map((item) => item.day))).toEqual(new Set([0, 1, 2, 3, 4])); });
+  it("is reproducible with a seed and excludes rejected/inactive meals", () => { const blocked = meals.map((item) => item.id === "d-beef" ? { ...item, preference: "rejected" as const } : item); const a = generateMenu({ ...input, meals: blocked }); const b = generateMenu({ ...input, meals: blocked }); expect(a).toEqual(b); expect(a.items.some((item) => item.meal.id === "d-beef")).toBe(false); });
+  it("does not pair the same protein family when alternatives exist", () => { const result = generateMenu(input); for (let day = 0; day < 5; day++) { const items = result.items.filter((item) => item.day === day); expect(items[0]!.meal.proteinFamily).not.toBe(items[1]!.meal.proteinFamily); } });
+  it("excludes current and weekly meals from replacement options without touching other items", () => { const result = generateMenu(input); const current = result.items[0]!; const other = result.items[1]!; const options = replacementOptions(input, current, other, result.items, 5); expect(options.map((item) => item.id)).not.toContain(current.meal.id); expect(options.every((item) => !result.items.filter((entry) => entry !== current).some((entry) => entry.meal.id === item.id))).toBe(true); expect(result.items).toHaveLength(10); });
+});
