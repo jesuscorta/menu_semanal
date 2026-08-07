@@ -26,7 +26,7 @@ export async function generateWeek(formData: FormData) {
   const { error: rpcError } = await supabase.rpc("replace_weekly_menu", { p_week_start: weekStart, p_mode: "balanced", p_items: items, p_replace: replace });
   if (rpcError) throw new Error(rpcError.message);
   revalidatePath("/week"); revalidatePath("/today");
-  redirect(`/week?week=${weekStart}`);
+  redirect(`/week?week=${weekStart}&notice=${replace ? "regenerated" : "generated"}`);
 }
 
 export async function replaceMeal(formData: FormData) {
@@ -35,5 +35,5 @@ export async function replaceMeal(formData: FormData) {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("replace_weekly_menu_item", { p_item_id: itemId, p_meal_id: mealId, p_reason: "Cambio manual" });
   if (error) throw new Error(error.message);
-  revalidatePath("/week"); revalidatePath("/today"); redirect(`/week?week=${week}`);
+  revalidatePath("/week"); revalidatePath("/today"); redirect(`/week?week=${week}&notice=replaced`);
 }
