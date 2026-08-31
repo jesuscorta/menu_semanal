@@ -1,6 +1,6 @@
 "use server";
 
-import { timingSafeEqual, scryptSync } from "node:crypto";
+import { timingSafeEqual, createHmac } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -12,7 +12,7 @@ function codeMatches(code: string) {
   const hash = process.env.ADMIN_ACCESS_CODE_HASH;
   const salt = process.env.ADMIN_ACCESS_CODE_SALT;
   if (!hash || !salt) throw new Error("Falta configurar el acceso administrador.");
-  const candidate = scryptSync(code, salt, 64).toString("base64");
+  const candidate = createHmac("sha256", salt).update(code).digest("base64");
   return timingSafeEqual(Buffer.from(candidate), Buffer.from(hash));
 }
 
