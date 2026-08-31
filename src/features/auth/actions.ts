@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 const codeSchema = z.string().trim().min(1, "Introduce el código de acceso.").max(256);
 
 function codeMatches(code: string) {
+  console.log("[AUTH DEBUG] received code:", JSON.stringify(code), "length:", code.length);
   const hash = process.env.ADMIN_ACCESS_CODE_HASH;
   const salt = process.env.ADMIN_ACCESS_CODE_SALT;
   console.log("[AUTH DEBUG] salt length:", salt?.length, "hash length:", hash?.length);
