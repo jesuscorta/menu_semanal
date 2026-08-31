@@ -11,8 +11,13 @@ const codeSchema = z.string().trim().min(1, "Introduce el código de acceso.").m
 function codeMatches(code: string) {
   const hash = process.env.ADMIN_ACCESS_CODE_HASH;
   const salt = process.env.ADMIN_ACCESS_CODE_SALT;
+  console.log("[AUTH DEBUG] salt length:", salt?.length, "hash length:", hash?.length);
+  console.log("[AUTH DEBUG] salt value:", JSON.stringify(salt));
+  console.log("[AUTH DEBUG] hash value:", JSON.stringify(hash));
   if (!hash || !salt) throw new Error("Falta configurar el acceso administrador.");
   const candidate = scryptSync(code, salt, 64).toString("base64");
+  console.log("[AUTH DEBUG] candidate:", candidate);
+  console.log("[AUTH DEBUG] match:", candidate === hash);
   return timingSafeEqual(Buffer.from(candidate), Buffer.from(hash));
 }
 
