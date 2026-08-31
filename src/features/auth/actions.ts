@@ -28,9 +28,11 @@ export async function signIn(_: { error?: string }, formData: FormData) {
   }
   const email = process.env.ADMIN_AUTH_EMAIL;
   const password = process.env.ADMIN_AUTH_PASSWORD;
+  console.log("[AUTH DEBUG] email configured:", !!email, "password configured:", !!password);
   if (!email || !password) return { error: "Falta configurar el acceso administrador." };
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  console.log("[AUTH DEBUG] supabase error:", error?.message, error?.status);
   if (error) return { error: "No se pudo iniciar la sesión." };
   store.delete("menu-login-attempts");
   redirect("/today");
